@@ -29,6 +29,32 @@
         </section>
     </main>
 
-    <script src="script.js"></script>
+    <script src="script.js">
+    // Global State
+let currentUser = null;
+let points = 0;
+
+// API Helpers
+async function apiFetch(endpoint, options = {}) {
+    const res = await fetch(endpoint, options);
+    if (res.status === 401) window.location.href = '/api/login';
+    return res.json();
+}
+
+// Initialize App
+async function init() {
+    currentUser = await apiFetch('/api/auth/user');
+    const stats = await apiFetch('/api/user/stats');
+    points = stats.points;
+    document.getElementById('user-points').innerText = `Points: ${points}`;
+    renderHome();
+}
+
+// Example: Submit a score to the backend
+async function winGame(score) {
+    await apiFetch('/api/games/score', {
+        method: 'POST',
+        headers: { 'Content-Type':
+            </script>'
 </body>
 </html>
