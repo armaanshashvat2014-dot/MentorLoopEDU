@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SmartBot AI</title>
+<title>SmartBot</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
+
 *{box-sizing:border-box}
 
 body{
 margin:0;
-font-family:Inter,Arial;
+font-family:Arial;
 background:#0f172a;
 color:white;
 display:flex;
 height:100vh;
 }
 
-/* Sidebar */
+/* sidebar */
 
 .sidebar{
 width:260px;
@@ -35,20 +36,18 @@ color:#00d4ff;
 margin-bottom:10px;
 }
 
-.newchat{
+button{
 padding:10px;
 border:none;
 border-radius:6px;
 background:#00d4ff;
-color:black;
-font-weight:bold;
 cursor:pointer;
+margin-bottom:10px;
 }
 
 .chat-history{
 flex:1;
 overflow-y:auto;
-margin-top:15px;
 }
 
 .chat-item{
@@ -56,29 +55,19 @@ padding:8px;
 border-radius:6px;
 cursor:pointer;
 margin-bottom:6px;
-display:flex;
-justify-content:space-between;
 }
 
 .chat-item:hover{
 background:#1e293b;
 }
 
-.delete{
-color:#ff6b6b;
-cursor:pointer;
-font-weight:bold;
-}
-
-/* Main */
+/* main */
 
 .main{
 flex:1;
 display:flex;
 flex-direction:column;
 }
-
-/* Header */
 
 .header{
 text-align:center;
@@ -87,12 +76,10 @@ border-bottom:1px solid #1e293b;
 }
 
 .title{
-font-size:34px;
+font-size:30px;
 font-weight:900;
 color:#00d4ff;
 }
-
-/* Chat */
 
 .chat{
 flex:1;
@@ -103,13 +90,12 @@ flex-direction:column;
 gap:12px;
 }
 
-/* Messages */
+/* messages */
 
 .message{
-max-width:700px;
+max-width:650px;
 padding:12px;
 border-radius:10px;
-line-height:1.5;
 display:flex;
 flex-direction:column;
 }
@@ -131,33 +117,23 @@ opacity:0.6;
 margin-top:4px;
 }
 
-/* Input */
+/* input */
 
 .input-area{
 border-top:1px solid #1e293b;
 padding:15px;
 display:flex;
-gap:10px;
+gap:8px;
 }
 
-input[type=text]{
+input{
 flex:1;
 padding:12px;
 border-radius:8px;
 border:none;
-font-size:15px;
 }
 
-button.send{
-padding:10px 18px;
-border:none;
-background:#00d4ff;
-border-radius:8px;
-font-weight:bold;
-cursor:pointer;
-}
-
-/* Thinking */
+/* thinking */
 
 .thinking{
 display:flex;
@@ -180,25 +156,19 @@ animation:blink 1.4s infinite;
 30%{opacity:1}
 }
 
-.preview{
-max-width:250px;
-border-radius:6px;
-margin-top:5px;
-}
-
-.filelabel{
-font-size:12px;
-opacity:0.7;
-}
 </style>
 </head>
 
 <body>
 
 <div class="sidebar">
+
 <div class="logo">SmartBot</div>
-<button class="newchat" onclick="newChat()">+ New Chat</button>
+
+<button onclick="newChat()">+ New Chat</button>
+
 <div class="chat-history" id="history"></div>
+
 </div>
 
 <div class="main">
@@ -210,9 +180,15 @@ opacity:0.7;
 <div class="chat" id="chat"></div>
 
 <div class="input-area">
-<input id="input" type="text" placeholder="Ask SmartBot...">
+
+<input id="input" placeholder="Ask SmartBot...">
+
 <input type="file" id="file">
-<button class="send" onclick="send()">Send</button>
+
+<button onclick="voice()">🎤</button>
+
+<button onclick="send()">Send</button>
+
 </div>
 
 </div>
@@ -230,32 +206,31 @@ function now(){
 return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
 }
 
+/* history */
+
 function renderHistory(){
+
 const history=document.getElementById("history")
 history.innerHTML=""
 
 Object.keys(chats).forEach(id=>{
 
-const item=document.createElement("div")
-item.className="chat-item"
+const div=document.createElement("div")
+div.className="chat-item"
+div.innerText=chats[id].title
 
-const title=document.createElement("span")
-title.innerText=chats[id].title
-title.onclick=()=>loadChat(id)
+div.onclick=()=>loadChat(id)
 
-const del=document.createElement("span")
-del.innerText="×"
-del.className="delete"
-del.onclick=()=>deleteChat(id)
-
-item.appendChild(title)
-item.appendChild(del)
-history.appendChild(item)
+history.appendChild(div)
 
 })
+
 }
 
+/* new chat */
+
 function newChat(){
+
 const id="chat"+Date.now()
 
 chats[id]={
@@ -268,29 +243,17 @@ currentChat=id
 saveChats()
 renderHistory()
 renderChat()
-}
-
-function deleteChat(id){
-
-delete chats[id]
-
-if(currentChat===id)
-currentChat=null
-
-saveChats()
-renderHistory()
-
-if(Object.keys(chats).length===0)
-newChat()
-else
-loadChat(Object.keys(chats)[0])
 
 }
+
+/* load chat */
 
 function loadChat(id){
 currentChat=id
 renderChat()
 }
+
+/* render */
 
 function renderChat(){
 
@@ -304,27 +267,12 @@ chats[currentChat].messages.forEach(m=>{
 const div=document.createElement("div")
 div.className="message "+m.role
 
-const text=document.createElement("div")
-text.innerText=m.text
-div.appendChild(text)
-
-if(m.image){
-const img=document.createElement("img")
-img.src=m.image
-img.className="preview"
-div.appendChild(img)
-}
-
-if(m.file){
-const label=document.createElement("div")
-label.className="filelabel"
-label.innerText="📎 "+m.file
-div.appendChild(label)
-}
+div.innerText=m.text
 
 const time=document.createElement("div")
 time.className="time"
 time.innerText=m.time
+
 div.appendChild(time)
 
 chat.appendChild(div)
@@ -332,16 +280,17 @@ chat.appendChild(div)
 })
 
 chat.scrollTop=chat.scrollHeight
+
 }
 
-function addMessage(role,text,image=null,file=null){
+/* add message */
+
+function addMessage(role,text){
 
 chats[currentChat].messages.push({
 role,
 text,
-time:now(),
-image,
-file
+time:now()
 })
 
 if(chats[currentChat].title==="New Chat")
@@ -350,7 +299,10 @@ chats[currentChat].title=text.slice(0,25)
 saveChats()
 renderHistory()
 renderChat()
+
 }
+
+/* thinking */
 
 function thinking(){
 
@@ -363,62 +315,35 @@ box.id="thinking"
 box.innerHTML='<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>'
 
 chat.appendChild(box)
-chat.scrollTop=chat.scrollHeight
 
 }
 
 function stopThinking(){
+
 const t=document.getElementById("thinking")
 if(t) t.remove()
+
 }
+
+/* send */
 
 function send(){
 
 const input=document.getElementById("input")
-const file=document.getElementById("file")
 
 const text=input.value.trim()
 
-if(!text && !file.files.length) return
-
-let image=null
-let filename=null
-
-if(file.files.length){
-
-const f=file.files[0]
-filename=f.name
-
-if(f.type.startsWith("image")){
-
-const reader=new FileReader()
-
-reader.onload=e=>{
-image=e.target.result
-addMessage("user",text,image,filename)
-reply(text)
-}
-
-reader.readAsDataURL(f)
-
-}else{
-
-addMessage("user",text,null,filename)
-reply(text)
-
-}
-
-file.value=""
-
-}else{
+if(!text) return
 
 addMessage("user",text)
+
+input.value=""
+
 reply(text)
 
 }
 
-input.value=""
-}
+/* open chatgpt */
 
 function reply(text){
 
@@ -428,20 +353,27 @@ setTimeout(()=>{
 
 stopThinking()
 
-let reply="I'm SmartBot 🤖. Connect me to an AI API."
+addMessage("bot...")
 
-if(text.toLowerCase().includes("math"))
-reply="I can help solve math problems. Try asking an equation."
+const url="https://chat.openai.com/?q="+encodeURIComponent(text)
 
-if(text.toLowerCase().includes("science"))
-reply="Science question detected 🔬. Ask me anything."
+window.open(url,"_blank")
 
-if(text.toLowerCase().includes("hello"))
-reply="Hello! I'm SmartBot, your AI tutor."
+},800)
 
-addMessage("bot",reply)
+}
 
-},900)
+/* voice input */
+
+function voice(){
+
+const rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)()
+
+rec.onresult=e=>{
+document.getElementById("input").value=e.results[0][0].transcript
+}
+
+rec.start()
 
 }
 
