@@ -1,392 +1,123 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>SmartBot</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
-*{box-sizing:border-box}
-
 body{
-margin:0;
 font-family:Arial;
 background:#0f172a;
 color:white;
-display:flex;
-height:100vh;
-}
-
-/* sidebar */
-
-.sidebar{
-width:260px;
-background:#020617;
-padding:20px;
-display:flex;
-flex-direction:column;
-border-right:1px solid #1e293b;
-}
-
-.logo{
-font-size:28px;
-font-weight:900;
-color:#00d4ff;
-margin-bottom:10px;
-}
-
-button{
-padding:10px;
-border:none;
-border-radius:6px;
-background:#00d4ff;
-cursor:pointer;
-margin-bottom:10px;
-}
-
-.chat-history{
-flex:1;
-overflow-y:auto;
-}
-
-.chat-item{
-padding:8px;
-border-radius:6px;
-cursor:pointer;
-margin-bottom:6px;
-}
-
-.chat-item:hover{
-background:#1e293b;
-}
-
-/* main */
-
-.main{
-flex:1;
-display:flex;
-flex-direction:column;
-}
-
-.header{
-text-align:center;
-padding:15px;
-border-bottom:1px solid #1e293b;
-}
-
-.title{
-font-size:30px;
-font-weight:900;
-color:#00d4ff;
+margin:0;
 }
 
 .chat{
-flex:1;
-overflow-y:auto;
+height:80vh;
+overflow:auto;
 padding:20px;
-display:flex;
-flex-direction:column;
-gap:12px;
 }
 
-/* messages */
-
 .message{
-max-width:650px;
-padding:12px;
-border-radius:10px;
-display:flex;
-flex-direction:column;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+max-width:600px;
 }
 
 .user{
 background:#00d4ff;
 color:black;
-align-self:flex-end;
+margin-left:auto;
 }
 
 .bot{
 background:#1e293b;
-align-self:flex-start;
 }
-
-.time{
-font-size:10px;
-opacity:0.6;
-margin-top:4px;
-}
-
-/* input */
 
 .input-area{
-border-top:1px solid #1e293b;
-padding:15px;
 display:flex;
-gap:8px;
+padding:10px;
+border-top:1px solid #333;
 }
 
 input{
 flex:1;
-padding:12px;
-border-radius:8px;
+padding:10px;
+border-radius:6px;
 border:none;
 }
 
-/* thinking */
-
-.thinking{
-display:flex;
-gap:5px;
-}
-
-.dot{
-width:6px;
-height:6px;
-border-radius:50%;
+button{
+padding:10px 15px;
+margin-left:5px;
+border:none;
 background:#00d4ff;
-animation:blink 1.4s infinite;
+border-radius:6px;
+cursor:pointer;
 }
-
-.dot:nth-child(2){animation-delay:0.2s}
-.dot:nth-child(3){animation-delay:0.4s}
-
-@keyframes blink{
-0%,60%,100%{opacity:0.3}
-30%{opacity:1}
-}
-
 </style>
+
 </head>
 
 <body>
 
-<div class="sidebar">
-
-<div class="logo">SmartBot</div>
-
-<button onclick="newChat()">+ New Chat</button>
-
-<div class="chat-history" id="history"></div>
-
-</div>
-
-<div class="main">
-
-<div class="header">
-<div class="title">SmartBot AI</div>
-</div>
-
 <div class="chat" id="chat"></div>
 
 <div class="input-area">
-
-<input id="input" placeholder="Ask SmartBot...">
-
-<input type="file" id="file">
-
-<button onclick="voice()">🎤</button>
-
-<button onclick="send()">Send</button>
-
-</div>
-
+<input id="question" placeholder="Ask SmartBot...">
+<button onclick="ask()">Send</button>
 </div>
 
 <script>
 
-let chats = JSON.parse(localStorage.getItem("smartbotChats")) || {}
-let currentChat = null
-
-function saveChats(){
-localStorage.setItem("smartbotChats", JSON.stringify(chats))
-}
-
-function now(){
-return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})
-}
-
-/* history */
-
-function renderHistory(){
-
-const history=document.getElementById("history")
-history.innerHTML=""
-
-Object.keys(chats).forEach(id=>{
+function add(role,text){
 
 const div=document.createElement("div")
-div.className="chat-item"
-div.innerText=chats[id].title
+div.className="message "+role
+div.innerText=text
 
-div.onclick=()=>loadChat(id)
-
-history.appendChild(div)
-
-})
+document.getElementById("chat").appendChild(div)
 
 }
 
-/* new chat */
+async function ask(){
 
-function newChat(){
+const input=document.getElementById("question")
 
-const id="chat"+Date.now()
+const q=input.value.trim()
 
-chats[id]={
-title:"New Chat",
-messages:[]
-}
+if(!q) return
 
-currentChat=id
-
-saveChats()
-renderHistory()
-renderChat()
-
-}
-
-/* load chat */
-
-function loadChat(id){
-currentChat=id
-renderChat()
-}
-
-/* render */
-
-function renderChat(){
-
-const chat=document.getElementById("chat")
-chat.innerHTML=""
-
-if(!currentChat) return
-
-chats[currentChat].messages.forEach(m=>{
-
-const div=document.createElement("div")
-div.className="message "+m.role
-
-div.innerText=m.text
-
-const time=document.createElement("div")
-time.className="time"
-time.innerText=m.time
-
-div.appendChild(time)
-
-chat.appendChild(div)
-
-})
-
-chat.scrollTop=chat.scrollHeight
-
-}
-
-/* add message */
-
-function addMessage(role,text){
-
-chats[currentChat].messages.push({
-role,
-text,
-time:now()
-})
-
-if(chats[currentChat].title==="New Chat")
-chats[currentChat].title=text.slice(0,25)
-
-saveChats()
-renderHistory()
-renderChat()
-
-}
-
-/* thinking */
-
-function thinking(){
-
-const chat=document.getElementById("chat")
-
-const box=document.createElement("div")
-box.className="message bot"
-box.id="thinking"
-
-box.innerHTML='<div class="thinking"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>'
-
-chat.appendChild(box)
-
-}
-
-function stopThinking(){
-
-const t=document.getElementById("thinking")
-if(t) t.remove()
-
-}
-
-/* send */
-
-function send(){
-
-const input=document.getElementById("input")
-
-const text=input.value.trim()
-
-if(!text) return
-
-addMessage("user",text)
+add("user",q)
 
 input.value=""
 
-reply(text)
+add("bot","Thinking...")
+
+try{
+
+const res=await fetch("https://api.allorigins.win/raw?url=https://api.duckduckgo.com/?q="+encodeURIComponent(q)+"&format=json")
+
+const data=await res.json()
+
+const answer=data.Abstract || data.Answer || "I couldn't find an answer."
+
+document.querySelectorAll(".bot").pop?.remove
+
+document.getElementById("chat").lastChild.remove()
+
+add("bot",answer)
+
+}catch{
+
+document.getElementById("chat").lastChild.remove()
+
+add("bot","Error getting answer.")
 
 }
 
-/* open chatgpt */
-
-function reply(text){
-
-thinking()
-
-setTimeout(()=>{
-
-stopThinking()
-
-addMessage("bot...")
-
-const url="https://chat.openai.com/?q="+encodeURIComponent(text)
-
-window.open(url,"_blank")
-
-},800)
-
 }
-
-/* voice input */
-
-function voice(){
-
-const rec=new(window.SpeechRecognition||window.webkitSpeechRecognition)()
-
-rec.onresult=e=>{
-document.getElementById("input").value=e.results[0][0].transcript
-}
-
-rec.start()
-
-}
-
-document.getElementById("input").addEventListener("keypress",function(e){
-if(e.key==="Enter") send()
-})
-
-renderHistory()
-
-if(Object.keys(chats).length===0)
-newChat()
-else
-loadChat(Object.keys(chats)[0])
 
 </script>
 
